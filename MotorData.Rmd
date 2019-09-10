@@ -1,0 +1,79 @@
+---
+title: "Motor Trend Dataset"
+author: "Kobra"
+date: "08/09/2019"
+output: pdf_document
+---
+
+# Motor Trend Data Analysis
+Using the data collected from various cars, we are interested in investigating any potential relationship between a set of variables and miles per gallon (MPG) (outcome). Particularly, we will try to answer the following questions:
+
+1) “Is an automatic or manual transmission better for MPG”
+2) "Quantify the MPG difference between automatic and manual transmissions" 
+
+Based on the analysis below, it was observed that manual transmission is associated with higher MPG. However, other variables also contribute to MPG values.
+
+## Initial exploratory data analysis
+Loading data itself:
+
+```{r, message = FALSE}
+library (dplyr)
+data (mtcars)
+```
+Data Structure:
+```{r, results= 'hide'}
+str (mtcars)
+```
+Variable 'am' (Transmission) needs to be converted to a factor variable and renamed properly: 0 for Atomatic and 1 for manual. Cyl, vs, gear and carb are also converted to factor variabes.
+```{r}
+mtcars$cyl <- as.factor(mtcars$cyl)
+mtcars$vs <- as.factor(mtcars$vs)
+mtcars$gear <- as.factor(mtcars$gear)
+mtcars$carb <- as.factor(mtcars$carb)
+mtcars$am <- as.factor (mtcars$am)
+levels (mtcars$am) <- c ("Automatic", "Manual")
+```
+# How does average values look like for MPG between manual and automatic transmission?
+he boxplot (appendix 1) shows a higher average value for manual group versus automatic group. The mean value and whether this difference is significant or not is investigated below:
+```{r}
+mtcars %>% group_by (am) %>% summarise(mean_MPG = mean (mpg))
+```
+```{r}
+t.test (mtcars$mpg ~ mtcars$am)$p.value
+```
+The t.test above shows a significant diffence between manual and automatic cars in terms of MPG.
+
+# Regression modelling:
+
+```{r}
+fit1 <- lm (mtcars$mpg~ mtcars$am)
+summary (fit1)
+```
+P-values from above show a significant relationship between MPG and transmission type. The equation coefficient suggests MPG increases by 7.245 miles/gallon on average for manual transmission cars compared to automatic.
+However, R squared value shows that only %35 of the variation in the data is explained by this model. This leads us thinking that other variables might also contribute to MPG.
+
+To find out which variables need to be included, here we use step function:
+```{r}
+fit2 <- step(lm(mpg ~ ., data = mtcars), trace=0)
+summary (fit2)
+```
+Referring to p-value and R squared, respectively, this model is significant and explains %86 of the variation in the data. Residuals are also randomly scattered (appendix 2) which also confirms the suitability of our model.
+
+## Conclusion:
+Based on the results, manual cars are associated with higher MPG (Miles/(US) gallon) values compared to automatic cars. However, other variables including cyl (Number of cylinders), hp (Gross horsepower) and wt (Weight (1000 lbs)) should also be used to explain the variation in MPG.
+
+# Appendix 1:
+Boxplot of MPG based on transmission type:
+
+```{r}
+boxplot(mpg~am, data =mtcars, xlab = "Transmisson")
+```
+
+# Appendix 2:
+
+Residual plot:
+```{r}
+par (mfrow= c(2,2))
+plot (fit2)
+```
+
